@@ -2,15 +2,15 @@ void main() throws InterruptedException {
   var latch = new MyCountDownLatch(1);
 
   new Thread(() -> {
-    latch.await();
-    IO.println("I'm ready now!");
+    var isCompletedNormally = latch.await(1, TimeUnit.SECONDS);
+    IO.println("I'm ready now! " + isCompletedNormally);
   }).start();
 
   new Thread(() -> {
-    latch.await();
-    IO.println("Me too!");
+    var isCompletedNormally = latch.await(1, TimeUnit.MINUTES);
+    IO.println("Me too! " + isCompletedNormally);
   }).start();
 
-  Thread.sleep(2000);
+  Thread.sleep(3000);
   latch.countDown();
 }
