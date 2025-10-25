@@ -32,17 +32,20 @@ public class MyCountDownLatch {
 
   public synchronized boolean await(long timeout, TimeUnit unit) {
     var timer = new Timer();
-    var targetTime = System.currentTimeMillis() + unit.toMillis(timeout);
     var task = new TimerTask() {
       @Override
       public void run() {
-        MyCountDownLatch.this.notifyAll();
+        synchronized (MyCountDownLatch.this) {
+          MyCountDownLatch.this.notifyAll();
+        }
       }
     };
 
-    timer.schedule(task, targetTime);
+    var startTime = System.currentTimeMillis();
+    var delay = unit.toMillis(timeout);
+    timer.schedule(task, delay);
 
-    while (System.currentTimeMillis() <= targetTime && count > 0) {
+    while (System.currentTimeMillis() < startTime + delay && count > 0) {
       try {
         wait();
       } catch (InterruptedException e) {
@@ -50,6 +53,6 @@ public class MyCountDownLatch {
       }
     }
 
-    return System.currentTimeMillis() <= targetTime;
+    return System.currentTimeMillis() < startTime + delay;
   }
 }
