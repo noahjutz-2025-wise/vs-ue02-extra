@@ -53,6 +53,7 @@ public class MyCountDownLatch {
       }
     }
 
+    timer.cancel();
     return System.currentTimeMillis() < startTime + delay;
   }
 }
