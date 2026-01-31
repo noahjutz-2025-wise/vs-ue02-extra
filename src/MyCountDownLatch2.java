@@ -1,5 +1,4 @@
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -8,7 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MyCountDownLatch2 {
   private int count = 0;
   private final int max;
-  private final Timer t = new Timer();
 
   public MyCountDownLatch2(int max) {
     this.max = max;
@@ -38,28 +36,17 @@ public class MyCountDownLatch2 {
   }
 
   public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-    var time = System.currentTimeMillis();
-    t.schedule(
-        new TimerTask() {
-          @Override
-          public void run() {
-            l.lock();
-            System.out.println("SIGNALALL");
-            condition.signalAll();
-            l.unlock();
-          }
-        },
-        unit.toMillis(timeout));
-
-    l.lock();
-    while (System.currentTimeMillis() < time + unit.toMillis(timeout) && count < max) {
-      condition.await();
-    }
-    l.unlock();
+    var nanos = unit.toNanos(timeout);
 
     l.lock();
     try {
-      return count >= max;
+      while (count < max) {
+        if (nanos <= 0) {
+          return false;
+        }
+        nanos = condition.awaitNanos(nanos);
+      }
+      return true;
     } finally {
       l.unlock();
     }
