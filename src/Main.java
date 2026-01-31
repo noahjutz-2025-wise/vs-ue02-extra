@@ -1,16 +1,34 @@
-void main() throws InterruptedException {
-  var latch = new MyCountDownLatch(1);
+import java.util.concurrent.TimeUnit;
 
-  new Thread(() -> {
-    var isCompletedNormally = latch.await(1, TimeUnit.SECONDS);
-    IO.println("I'm ready now! " + isCompletedNormally);
-  }).start();
+public class Main {
+  void main() throws InterruptedException {
+    var latch = new MyCountDownLatch2(1);
 
-  new Thread(() -> {
-    var isCompletedNormally = latch.await(1, TimeUnit.MINUTES);
-    IO.println("Me too! " + isCompletedNormally);
-  }).start();
+    new Thread(
+            () -> {
+              boolean isCompletedNormally = false;
+              try {
+                isCompletedNormally = latch.await(1, TimeUnit.SECONDS);
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
+              IO.println("I'm ready now! " + isCompletedNormally);
+            })
+        .start();
 
-  Thread.sleep(3000);
-  latch.countDown();
+    new Thread(
+            () -> {
+              boolean isCompletedNormally = false;
+              try {
+                isCompletedNormally = latch.await(1, TimeUnit.MINUTES);
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
+              IO.println("Me too! " + isCompletedNormally);
+            })
+        .start();
+
+    Thread.sleep(3000);
+    latch.countDown();
+  }
 }
